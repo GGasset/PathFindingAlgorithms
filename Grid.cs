@@ -6,13 +6,19 @@ namespace PathFindingAlgorithms
     /// <summary>
     /// Grid made to support implementation of any path finding algorithms
     /// </summary>
-    class Grid
+    internal class Grid
     {
         private Column[] columns;
-        private Size size;
-        public Point startingPoint, targetPoint;
+        public readonly Size size;
+        public Point startingPoint { get => startingPoint; set { GetCell(startingPoint = value).CellState = Cell.CellStates.StartingPoint; } }
+        public Point targetPoint { get => targetPoint; set { GetCell(targetPoint = value).CellState = Cell.CellStates.TargetPoint; } }
 
-        public Grid(int width, int height) => new Grid(new Size(width, height));
+        public Grid(int width, int height)
+        {
+            Grid grid = new Grid(new Size(width, height));
+            columns = grid.columns;
+            size = grid.size;
+        }
 
         public Grid(Size size)
         {
@@ -23,6 +29,7 @@ namespace PathFindingAlgorithms
         }
 
         public Cell GetCell(int x, int y) => GetCell(new Point(x, y));
+
         public Cell GetCell(Point positionIndex) => columns[positionIndex.Y].GetCell(positionIndex.X);
 
         public string GetRepresented()
@@ -38,15 +45,16 @@ namespace PathFindingAlgorithms
         }
     }
 
-    class Column
+    internal class Column
     {
         public Grid parentGrid;
         private Cell[] cells;
-        int columnIndex;
+        public int columnIndex { get; }
         public int Lenght { get => cells.Length; }
 
-        public Column(int columnIndex, int width, Grid parentGrid) 
+        public Column(int columnIndex, int width, Grid parentGrid)
         {
+            this.columnIndex = columnIndex;
             this.parentGrid = parentGrid;
             cells = new Cell[width];
             for (int i = 0; i < width; i++)
@@ -59,45 +67,51 @@ namespace PathFindingAlgorithms
         public Cell GetCell(int index) => cells[index];
     }
 
-    class Cell
+    internal class Cell
     {
         private Grid parentGrid;
         private Column parentColumn;
-        public readonly Point location;
+        public readonly Point position;
         public CellStates CellState = CellStates.Blank;
         public int cost;
+        public bool calculated = false;
 
         public enum CellStates
-	    {
+        {
             Blank,
             Wall,
-            CalculatedBlank,
-	    }
+            StartingPoint,
+            TargetPoint,
+        }
+
+        public Cell(Point position, Column parent)
+        {
+            this.position = position;
+            parentColumn = parent;
+            parentGrid = parent.parentGrid;
+        }
+
+        /// <summary>
+        /// returns an index based on its position, only recommended use is as an identifier
+        /// </summary>
+        public int GetIndex() => (parentColumn.Lenght - 1) * position.Y + position.X;
 
         public string GetStateRepresentation()
         {
-            switch (CellState)
-	        {
-		        case CellStates.Blank:
-                    return "- ";
-                 break;
-                case CellStates.Wall:
-                    return "# ";
-                 break;
-                case CellStates.CalculatedBlank:
-                    return $"{cost.ToString()} ";
-                 break;
-                default:
-                    throw new NotImplementedException();
-                 break;
-	}
-        }
+            if (calculated)
+                return cost.ToString();
+            else
+                switch (CellState)
+                {
+                    case CellStates.Blank:
+                        return "- ";
 
-        public Cell(Point location, Column parent)
-        {
-            this.location = location;
-            parentColumn = parent;
-            parentGrid = parent.parentGrid;
+                    case CellStates.Wall:
+                        return "# ";
+
+                    default:
+                        throw new NotImplementedException();
+                }
         }
 
         public Cell[] GetNeighbourCells()
@@ -112,21 +126,21 @@ namespace PathFindingAlgorithms
                         case 0://Top
                         case 1:
                         case 2:
-                            output[i] = parentGrid.GetCell(new Point(location.X - i - 1, location.Y - 1));
+                            output[i] = parentGrid.GetCell(new Point(position.X - i - 1, position.Y - 1));
                             break;
 
                         case 3://Sides
-                            output[i] = parentColumn.GetCell(location.X - 1);
+                            output[i] = parentColumn.GetCell(position.X - 1);
                             break;
 
                         case 4:
-                            output[i] = parentColumn.GetCell(location.X + 1);
+                            output[i] = parentColumn.GetCell(position.X + 1);
                             break;
 
                         case 5://Bottom
                         case 6:
                         case 7:
-                            output[i] = parentGrid.GetCell(new Point(location.X - (i - 6), location.Y + 1));
+                            output[i] = parentGrid.GetCell(new Point(position.X - (i - 6), position.Y + 1));
                             break;
                     }
                 }
@@ -137,5 +151,23 @@ namespace PathFindingAlgorithms
             }
             return output;
         }
+
+        /// <param name="excludedCell">Cell that won't be returned</param>
+        public Cell GetNeighboursLowestCost(Cell excludedCell)
+        {
+            Cell[] neighbours = GetNeighbourCells();
+            Cell output = null;
+            int lowestCost = int.MaxValue;
+            foreach (Cell cell in neighbours)
+                if (cell.GetIndex() != excludedCell.GetIndex() && cell.calculated)
+                    if (cell.cost < lowestCost)
+                    {
+                        output = cell;
+                        lowestCost = cell.cost;
+                    }
+            return output;
+        }
+
+        public Cell GetNeighboursLowestCost() => GetNeighboursLowestCost(new Cell(new Point(int.MaxValue, int.MaxValue), parentColumn));
     }
 }
