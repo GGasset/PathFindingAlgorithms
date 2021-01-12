@@ -11,9 +11,16 @@ namespace PathFindingAlgorithms
     {
         static void Main(string[] args)
         {
-            Grid grid = new Grid(20,20);
-            grid.GetCell(grid.size.Width / 2-1, grid.size.Height / 2-1).CellState = Cell.CellStates.Wall;
-            Console.WriteLine(grid.GetRepresented());
+            Grid grid = new Grid(30,20);
+            grid.GetCell(5, 10).CellState = Cell.CellStates.Wall;
+            grid.SetStartPos(new Point(0, 10));
+            grid.SetTargetPos(new Point(29, 10));
+            /*for (int Y = 0; Y < grid.size.Height; Y++)
+                if (Y != 4)
+                    grid.GetCell(15, Y).CellState = Cell.CellStates.Wall;*/
+            Console.WriteLine(grid.GetRepresented() + "\n\n\n");
+            Visualization visualization = Algorithms.AStar(grid);
+            Console.WriteLine(visualization.GetGridString());
             Console.ReadKey();
         }
     }
