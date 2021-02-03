@@ -16,7 +16,7 @@ namespace PathFindingAlgorithms
 
             do
             {
-                if (toEvaluate.Count == 0)//Agorithm failed, no path
+                if (toEvaluate.Count == 0)//Algorithm failed, no path
                     return new Visualization(grid, null, Conversion.ToPoints(checkedCells));
 
                 int lowestCost = int.MaxValue, lowestCostToevaluateIndex = int.MaxValue;
@@ -96,14 +96,14 @@ namespace PathFindingAlgorithms
                 return output;
             }
 
-            Point GetLowestStartDistanceAdjacentInPosition(List<Cell> list, Point currenPos, List<Cell> excludedCells)
+            Point GetLowestStartDistanceAdjacentInPosition(List<Cell> list, Point currentPos, List<Cell> excludedCells)
             {
                 Point output = new Point();
                 int lowestDistance = int.MaxValue;
                 foreach (Cell cell in list)
                     if (!excludedCells.Contains(cell) && lowestDistance > cell.startDistance)
                     {
-                        Point difference = new Point(Math.Abs(cell.position.X - currenPos.X), Math.Abs(cell.position.Y - currenPos.Y));
+                        Point difference = new Point(Math.Abs(cell.position.X - currentPos.X), Math.Abs(cell.position.Y - currentPos.Y));
                         if (difference != Point.Empty)
                             if (difference.X <= 1 && difference.Y <= 1)
                             {
@@ -119,8 +119,9 @@ namespace PathFindingAlgorithms
 
         private Visualization Dijkstra(Grid grid)
         {
-            throw new NotImplementedException();
             Stack<Cell> path = new Stack<Cell>();
+            List<Point> checkedCells = new List<Point>();
+            throw new NotImplementedException();
         }
     }
 }
